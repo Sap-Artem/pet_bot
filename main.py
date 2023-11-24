@@ -70,9 +70,10 @@ def database_language(message):
     records = cursor.fetchall()
     list = []
     for row in records:
-        if str(row[7])[len(str(row[7]))-6:len(str(row[7]))] == str(message)[len(str(message))-6:len(str(message))]:
+        if str(row[8])[len(str(row[8]))-6:len(str(row[8]))] == str(message)[len(str(message))-6:len(str(message))]:
             list.append(row[0])
-            list.append(row[3])
+            list.append(row[1])
+            list.append(row[4])
     return list
 def database_number(message):
     sqlite_connection = sqlite3.connect('dbtest.db')
@@ -84,16 +85,17 @@ def database_number(message):
     for row in records:
         k = False
         if message == "1 человек":
-            k = (row[5] == 1)
+            k = (row[6] == 1)
         elif message == "2 человека":
-            k = (row[5] == 2)
+            k = (row[6] == 2)
         elif message == "3-8 человек":
-            k = (row[5] >= 3 & row[5] <= 8)
+            k = (row[6] >= 3 & row[6] <= 8)
         elif message == "более 8 человек":
-            k = (row[5] > 8)
+            k = (row[6] > 8)
         if k:
             list.append(row[0])
-            list.append(row[3])
+            list.append(row[1])
+            list.append(row[4])
     return list
 
 def database_format(message):
@@ -104,9 +106,10 @@ def database_format(message):
     records = cursor.fetchall()
     list = []
     for row in records:
-        if str(row[4])[len(str(row[4])) - 17:len(str(row[4]))] == str(message)[len(str(message)) - 17:len(str(message))]:
+        if str(row[5])[len(str(row[5])) - 17:len(str(row[5]))] == str(message)[len(str(message)) - 17:len(str(message))]:
             list.append(row[0])
-            list.append(row[3])
+            list.append(row[1])
+            list.append(row[4])
     return list
 
 def database_time(message):
@@ -117,7 +120,7 @@ def database_time(message):
     records = cursor.fetchall()
     list = []
     for row in records:
-        value = int(str(row[6])[0:str(row[6]).find(" ")])
+        value = int(str(row[7])[0:str(row[7]).find(" ")])
         k = False
         if message == "срок: меньше недели":
             k = (value < 7)
@@ -129,7 +132,8 @@ def database_time(message):
             k = (value > 180)
         if k:
             list.append(row[0])
-            list.append(row[3])
+            list.append(row[1])
+            list.append(row[4])
     return list
 
 @bot.message_handler(commands=['start'])
@@ -142,6 +146,28 @@ def start(message):
 @bot.callback_query_handler(func=lambda call: True)
 def call_query(call):
     if call.message:
+        if call.data[0:7] == 'project':
+            sqlite_connection = sqlite3.connect('dbtest.db')
+            cursor = sqlite_connection.cursor()
+            sqlite_select_query = """SELECT * from idea"""
+            cursor.execute(sqlite_select_query)
+            records = cursor.fetchall()
+            string = ""
+            for row in records:
+                if int(call.data[call.data.find("_")+1:len(call.data)]) == int(row[0]):
+                    string = "Название проекта: " + str(row[1]) + "\n" + \
+                             "Балл: " + str(row[2]) + "\n" + \
+                             "Описание : " + str(row[3]) + "\n" + \
+                             "Направление: " + str(row[5]) + "\n" + \
+                             "Количество участников: " + str(row[6]) + "\n" + \
+                             "Сроки реализации: " + str(row[7]) + "\n" + \
+                             "Язык программирования: " + str(row[7]) + "\n" + \
+                             "Аудитория: " + str(row[9]) + "\n" + \
+                             "Предлагаемые технологии: " + str(row[10]) + "\n"
+            db = types.InlineKeyboardMarkup()
+            back = types.InlineKeyboardButton(text='В главное меню', callback_data='back_message')
+            db.row(back)
+            bot.send_message(call.message.chat.id, string, reply_markup=db)
         if call.data == 'back_message':
             first_mess = f"{call.from_user.first_name} {call.from_user.last_name}, здраствуйте,\n" \
                          f"В нашем телеграм-боте вы сможете найти подходящие вам идеи pet-проектов. Вне зависимости от вашего уровня программирования, вы точно не уйдёте с пустыми руками\n" \
@@ -165,10 +191,10 @@ def call_message(message):
         i = 0
         while i<len(list):
             db = types.InlineKeyboardMarkup()
-            project = types.InlineKeyboardButton(text=list[i], callback_data='project_n')
+            project = types.InlineKeyboardButton(text=list[i+1], callback_data='project_'+str(list[i]))
             db.row(project)
-            bot.send_message(message.chat.id, list[i] + "\n" + list[i+1], parse_mode='Markdown', reply_markup=db)
-            i = i + 2
+            bot.send_message(message.chat.id, list[i+1] + "\n" + list[i+2], parse_mode='Markdown', reply_markup=db)
+            i = i + 3
         db_language = types.InlineKeyboardMarkup()
         back = types.InlineKeyboardButton(text='В главное меню', callback_data='back_message')
         db_language.row(back)
@@ -179,10 +205,10 @@ def call_message(message):
         i = 0
         while i < len(list):
             db = types.InlineKeyboardMarkup()
-            project = types.InlineKeyboardButton(text=list[i], callback_data='project_n')
+            project = types.InlineKeyboardButton(text=list[i+1], callback_data='project_'+str(list[i]))
             db.row(project)
-            bot.send_message(message.chat.id, list[i] + "\n" + list[i + 1], parse_mode='Markdown', reply_markup=db)
-            i = i + 2
+            bot.send_message(message.chat.id, list[i+1] + "\n" + list[i + 2], parse_mode='Markdown', reply_markup=db)
+            i = i + 3
         db_number = types.InlineKeyboardMarkup()
         back = types.InlineKeyboardButton(text='В главное меню', callback_data='back_message')
         db_number.row(back)
@@ -193,10 +219,10 @@ def call_message(message):
         i = 0
         while i < len(list):
             db = types.InlineKeyboardMarkup()
-            project = types.InlineKeyboardButton(text=list[i], callback_data='project_n')
+            project = types.InlineKeyboardButton(text=list[i+1], callback_data='project_'+str(list[i]))
             db.row(project)
-            bot.send_message(message.chat.id, list[i] + "\n" + list[i + 1], parse_mode='Markdown', reply_markup=db)
-            i = i + 2
+            bot.send_message(message.chat.id, list[i+1] + "\n" + list[i + 2], parse_mode='Markdown', reply_markup=db)
+            i = i + 3
         db_format = types.InlineKeyboardMarkup()
         back = types.InlineKeyboardButton(text='В главное меню', callback_data='back_message')
         db_format.row(back)
@@ -207,10 +233,10 @@ def call_message(message):
         i = 0
         while i < len(list):
             db = types.InlineKeyboardMarkup()
-            project = types.InlineKeyboardButton(text=list[i], callback_data='project_n')
+            project = types.InlineKeyboardButton(text=list[i+1], callback_data='project_'+str(list[i]))
             db.row(project)
-            bot.send_message(message.chat.id, list[i] + "\n" + list[i + 1], parse_mode='Markdown', reply_markup=db)
-            i = i + 2
+            bot.send_message(message.chat.id, list[i+1] + "\n" + list[i + 2], parse_mode='Markdown', reply_markup=db)
+            i = i + 3
         db_time = types.InlineKeyboardMarkup()
         back = types.InlineKeyboardButton(text='В главное меню', callback_data='back_message')
         db_time.row(back)
