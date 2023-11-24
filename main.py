@@ -1,5 +1,6 @@
 import telebot
 from telebot import types
+import sqlite3
 
 bot = telebot.TeleBot('6767523338:AAHCT-k6OvYwOBGzikc71QgfW75A9XxOEYM')
 
@@ -67,6 +68,15 @@ def db_language_func():
     db_language.row(back)
     return db_language
 
+def database_language():
+    sqlite_connection = sqlite3.connect('dbtest.db')
+    cursor = sqlite_connection.cursor()
+    sqlite_select_query = """SELECT * from idea"""
+    cursor.execute(sqlite_select_query)
+    records = cursor.fetchall()
+    for row in records:
+        return row[0]
+
 def db_number_func():
     db_number = types.InlineKeyboardMarkup()
     back = types.InlineKeyboardButton(text='В главное меню', callback_data='back_message')
@@ -112,7 +122,7 @@ def call_message(message):
     elif message.text == 'Сроки проекта':
         bot.send_message(message.chat.id, "Выбирете подходящие вам сроки проекта", reply_markup=time_func())
     elif str(message.text)[0:4] == 'язык':
-        bot.send_message(message.chat.id, result_text, reply_markup=db_language_func())
+        bot.send_message(message.chat.id, result_text + "\n" + database_language(), reply_markup=db_language_func())
     elif str(message.text)[len(str(message.text))-7] == 'человек':
         bot.send_message(message.chat.id, result_text, reply_markup=db_number_func())
     elif str(message.text)[0:11] == 'направление':
