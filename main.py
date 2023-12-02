@@ -1,7 +1,7 @@
 import telebot
 from telebot import types
 
-bot = telebot.TeleBot('6767523338:AAHCT-k6OvYwOBGzikc71QgfW75A9XxOEYM')
+bot = telebot.TeleBot('')
 
 def main_menu():
     markup = types.InlineKeyboardMarkup()
