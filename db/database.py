@@ -115,6 +115,25 @@ class BotDataBase:
         response += (self.cursor.fetchone())
         return response
 
+    def get_all(self, n=None, reverse=False):
+        """
+        Метод возвращает название, краткую информацию о N-ом количестве идей из БД.
+        Если n не задано, метод возвращает информацию о всех идеях.
+        :param reverse: False (по умолчанию) - возвращает список в обычном порядке. True - в обратном.
+        :param n: Количество возвращаемых идей. Если не задано - вернет все.
+        :return: Список из id, name, summary каждой идеи.
+        """
+        flag_amount = ''
+        flag_reverse = ''
+        if n:
+            flag_amount = ' LIMIT ' + str(n)
+        if reverse:
+            flag_reverse = ' ORDER BY id DESC '
+        query = f''' SELECT IDEAS.ID, IDEAS.NAME, IDEAS.SUMMARY FROM IDEAS{flag_reverse}{flag_amount};  '''
+        self.cursor.execute(query)
+        response = [res for res in self.cursor]
+        return response
+
 # db.add('Классная идея 1', 10, 'Описание идеи 1', 'Краткое описание 1',
 # 'Backend-разработка', 'Python', 3, 1)
 # db.add('Классная идея 2', 8, 'Описание идеи 2', 'Краткое описание 2',
