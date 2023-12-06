@@ -39,7 +39,7 @@ class BotDataBase:
         self.cursor.execute(query)
         self.db.commit()
 
-    def search_by_language(self, languages: list or str):
+    def search_by_language(self, languages: list or str) -> list:
         """
         Метод принимает язык программирования и выводит краткую информацию о всех идеях с этим языком программирования из БД.
         :param languages:
@@ -52,7 +52,7 @@ class BotDataBase:
             response += [res for res in self.cursor]
         return response
 
-    def search_by_people(self, people_number: str):
+    def search_by_people(self, people_number: str) -> list:
         """
         Метод принимает кол-во участников и выводит краткую информацию о всех идеях с этим кол-вом участников из БД.
         :param people_number: Кол-во участников, как на кнопке.
@@ -71,7 +71,7 @@ class BotDataBase:
         response = [res for res in self.cursor]
         return response
 
-    def search_by_format(self, request: str):
+    def search_by_format(self, request: str) -> list:
         """
         Метод принимает формат (тему) идеи и выводит краткую информацию о всех идеях с этим форматом из БД.
         :param request: Формат, как на кнопке.
@@ -82,7 +82,7 @@ class BotDataBase:
         response = [res for res in self.cursor]
         return response
 
-    def search_by_time(self, time: str):
+    def search_by_time(self, time: str) -> list:
         """
         Метод принимает срок выполнения идеи и выводит краткую информацию о всех идеях с этим сроком из БД.
         :param time: Время, как на кнопке.
@@ -101,7 +101,7 @@ class BotDataBase:
         response = [res for res in self.cursor]
         return response
 
-    def get_by_id(self, idea_id: int):
+    def get_by_id(self, idea_id: int) -> list:
         """
         Метод принимает ID идеи и выводит всю информацию о ней из БД.
         :param idea_id: ID
@@ -115,7 +115,7 @@ class BotDataBase:
         response += (self.cursor.fetchone())
         return response
 
-    def get_all(self, n=None, reverse=False):
+    def get_all(self, n=None, reverse=False) -> list:
         """
         Метод возвращает название, краткую информацию о N-ом количестве идей из БД.
         Если n не задано, метод возвращает информацию о всех идеях.
@@ -134,12 +134,22 @@ class BotDataBase:
         response = [res for res in self.cursor]
         return response
 
+    def ideas_amount(self) -> int:
+        """
+        Метод возвращает количество идей в БД.
+        :return: Число идей в БД
+        """
+        query = ''' SELECT COUNT(*) FROM IDEAS; '''
+        self.cursor.execute(query)
+        return self.cursor.fetchone()[0]
+
+# db = BotDataBase('database.db')
+# print(db.ideas_amount())
+
 # db.add('Классная идея 1', 10, 'Описание идеи 1', 'Краткое описание 1',
 # 'Backend-разработка', 'Python', 3, 1)
 # db.add('Классная идея 2', 8, 'Описание идеи 2', 'Краткое описание 2',
 # 'Mobile-разработка', 'JavaScript', 3, 2)
-# db.add('Классная идея 3', 7, 'Описание идеи 3', 'Краткое описание 1',
-# 'Mobile-разработка', 'Python', 3, 3)
 # print(db.search_by_language('Python'))
 # print(db.search_by_people(2))
 # print(db.search_by_format('Backend-разработка'))
