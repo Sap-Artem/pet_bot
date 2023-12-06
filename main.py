@@ -6,7 +6,7 @@ import datetime
 
 from db import database
 
-bot = telebot.TeleBot('6767523338:AAHCT-k6OvYwOBGzikc71QgfW75A9XxOEYM')
+bot = telebot.TeleBot('')
 
 result_text = "Спасибо за использование нашего телеграм-бота!\n" \
               "Ниже представлены наиболее подходящие pet-проекты согласно предоставленной информации"
