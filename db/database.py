@@ -134,6 +134,15 @@ class BotDataBase:
         response = [res for res in self.cursor]
         return response
 
+    def ideas_amount(self) -> int:
+        """
+        Метод возвращает количество идей в БД.
+        :return: Число идей в БД
+        """
+        query = ''' SELECT COUNT(*) FROM IDEAS; '''
+        self.cursor.execute(query)
+        return self.cursor.fetchone()[0]
+
 # db.add('Классная идея 1', 10, 'Описание идеи 1', 'Краткое описание 1',
 # 'Backend-разработка', 'Python', 3, 1)
 # db.add('Классная идея 2', 8, 'Описание идеи 2', 'Краткое описание 2',
