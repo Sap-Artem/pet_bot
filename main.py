@@ -1,5 +1,8 @@
+import math
+
 import telebot
 from telebot import types
+import datetime
 
 from db import database
 
@@ -8,7 +11,7 @@ bot = telebot.TeleBot('')
 result_text = "Спасибо за использование нашего телеграм-бота!\n" \
               "Ниже представлены наиболее подходящие pet-проекты согласно предоставленной информации"
 
-
+position = 1
 def main_menu():
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     language = types.KeyboardButton(text='Язык программирования')
@@ -17,6 +20,11 @@ def main_menu():
     format = types.InlineKeyboardButton(text='Формат проекта')
     time = types.InlineKeyboardButton(text='Сроки проекта')
     markup.add(format, time)
+    list_all = types.InlineKeyboardButton(text='Показать все pet-проекты')
+    suggest_idea = types.InlineKeyboardButton(text='Предложить идею')
+    markup.add(list_all, suggest_idea)
+    admin_enter = types.InlineKeyboardButton(text='Войти от имени администратора')
+    markup.add(admin_enter)
     return markup
 
 
@@ -103,6 +111,31 @@ def database_time(message):
     answer = db.search_by_time(message)
     return answer
 
+def database_all():
+    db = database.BotDataBase('db/database.db')
+    answer = db.get_all()
+    return answer
+def murkup_all():
+    list = database_all()
+    db = types.InlineKeyboardMarkup()
+    for i in range ((position-1)*5,position*5):
+        if i<len(list):
+            project = types.InlineKeyboardButton(text=list[i][1] + " - " + list[i][2], callback_data='project_' + str(list[i][0]))
+            db.row(project)
+    left = types.InlineKeyboardButton(text='<', callback_data='left_message')
+    pos = types.InlineKeyboardButton(text=str(position) + '/'+ str(math.ceil(len(list)/5)), callback_data='pos_message')
+    right = types.InlineKeyboardButton(text='>', callback_data='right_message')
+    db.row(left, pos, right)
+    back = types.InlineKeyboardButton(text='В главное меню', callback_data='back_message')
+    db.row(back)
+    return db
+def get_time():
+    all_time = str(datetime.datetime.now())
+    years = all_time[0:4]
+    month = all_time[5:7]
+    day = all_time[8:10]
+    time = all_time[10:19]
+    return "Все pet-проекты загруженные до" + time + " " + day + "." + month + "." + years
 
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -114,6 +147,7 @@ def start(message):
 
 @bot.callback_query_handler(func=lambda call: True)
 def call_query(call):
+    global position
     if call.message:
         if call.data[0:7] == 'project':
             info_db = database.BotDataBase('db/database.db')
@@ -131,12 +165,23 @@ def call_query(call):
             back = types.InlineKeyboardButton(text='В главное меню', callback_data='back_message')
             db.row(back)
             bot.send_message(call.message.chat.id, string, reply_markup=db)
+        if call.data == 'right_message':
+            db = database.BotDataBase('db/database.db')
+            if db.ideas_amount() > position*5:
+                position = position + 1
+                bot.delete_message(call.message.chat.id, call.message.id)
+                bot.send_message(call.message.chat.id, get_time(), reply_markup=murkup_all())
+        if call.data == 'left_message':
+            if position > 1:
+                position = position - 1
+                bot.delete_message(call.message.chat.id, call.message.id)
+                bot.send_message(call.message.chat.id, get_time(), reply_markup=murkup_all())
         if call.data == 'back_message':
             first_mess = f"{call.from_user.first_name} {call.from_user.last_name}, здраствуйте,\n" \
                          f"В нашем телеграм-боте вы сможете найти подходящие вам идеи pet-проектов. Вне зависимости от вашего уровня программирования, вы точно не уйдёте с пустыми руками\n" \
                          f"Прежде чем начать, пожалуйста, выберите категорию поиска"
+            position = 1
             bot.send_message(call.message.chat.id, first_mess, reply_markup=main_menu())
-
 
 @bot.message_handler(content_types=['text'])
 def call_message(message):
@@ -148,6 +193,8 @@ def call_message(message):
         bot.send_message(message.chat.id, "Выбирете подходящий формат разработки", reply_markup=format_func())
     elif message.text == 'Сроки проекта':
         bot.send_message(message.chat.id, "Выбирете подходящие вам сроки проекта", reply_markup=time_func())
+    elif message.text == 'Показать все pet-проекты':
+        bot.send_message(message.chat.id, text=get_time(), parse_mode='Markdown', reply_markup=murkup_all())
     elif str(message.text)[0:4] == 'язык':
         # bot.send_message(message.chat.id, result_text + "\n" + database_language(message.text), parse_mode= 'Markdown', reply_markup=db_language_func())
         bot.send_message(message.chat.id, result_text)
@@ -213,7 +260,7 @@ def call_message(message):
         bot.send_message(message.chat.id, first_mess, reply_markup=main_menu())
     else:
         bot.send_message(message.chat.id, "раздел в разработке")
-    # bot.delete_message(call.message.chat.id, call.message.message_id)
+    # bot.delete_message(message.chat.id, message.message_id)
     # bot.answer_callback_query(callback_query_id=message.id, show_alert=False)
 
 

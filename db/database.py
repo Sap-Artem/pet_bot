@@ -134,6 +134,20 @@ class BotDataBase:
         response = [res for res in self.cursor]
         return response
 
+    def is_admin(self, check_id: int) -> bool:
+        """
+        Функция проверят, содержится ли id в базе админов.
+        :param check_id: Проверяемый id
+        :return: True, если id админский, False, если нет.
+        """
+        query = ''' SELECT * FROM admin_id; '''
+        self.cursor.execute(query)
+        response = self.cursor.fetchall()
+        return check_id in [item[0] for item in response]
+
+# db = BotDataBase('database.db')
+# print(db.is_admin())
+
 # db.add('Классная идея 1', 10, 'Описание идеи 1', 'Краткое описание 1',
 # 'Backend-разработка', 'Python', 3, 1)
 # db.add('Классная идея 2', 8, 'Описание идеи 2', 'Краткое описание 2',
