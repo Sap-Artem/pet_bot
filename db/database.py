@@ -134,14 +134,19 @@ class BotDataBase:
         response = [res for res in self.cursor]
         return response
 
-    def ideas_amount(self) -> int:
+    def is_admin(self, check_id: int) -> bool:
         """
-        Метод возвращает количество идей в БД.
-        :return: Число идей в БД
+        Функция проверят, содержится ли id в базе админов.
+        :param check_id: Проверяемый id
+        :return: True, если id админский, False, если нет.
         """
-        query = ''' SELECT COUNT(*) FROM IDEAS; '''
+        query = ''' SELECT * FROM admin_id; '''
         self.cursor.execute(query)
-        return self.cursor.fetchone()[0]
+        response = self.cursor.fetchall()
+        return check_id in [item[0] for item in response]
+
+# db = BotDataBase('database.db')
+# print(db.is_admin())
 
 # db.add('Классная идея 1', 10, 'Описание идеи 1', 'Краткое описание 1',
 # 'Backend-разработка', 'Python', 3, 1)
