@@ -157,6 +157,11 @@ class BotDataBase:
         return check_id in [item[0] for item in response]
 
     def get_language_id(self, item):
+        """
+        Функция возвращает id языка из базы по названию
+        :param item: название языка
+        :return: id или 0
+        """
         query = f''' SELECT language_id FROM languages WHERE language_name="{item}"; '''
         self.cursor.execute(query)
         response = self.cursor.fetchone()
@@ -165,6 +170,11 @@ class BotDataBase:
         return 0
 
     def get_theme_id(self, item):
+        """
+        Функция возвращает id формата из базы по названию
+        :param item: название формата
+        :return: id или 0
+        """
         item = item.split('-')[0]
         query = f''' SELECT id FROM themes WHERE theme_name="{item}"; '''
         self.cursor.execute(query)
@@ -176,6 +186,19 @@ class BotDataBase:
     def add_suggestion(self, name='', rating=0, description='', summary='', theme='', language='', people=0, time=0,
                        level=0,
                        technologies=''):
+        """
+        Функция принимает информацию из идеи и добавляет ее в предложку
+        :param name:
+        :param rating:
+        :param description:
+        :param summary:
+        :param theme:
+        :param language:
+        :param people:
+        :param time:
+        :param level:
+        :param technologies:
+        """
         language = self.get_language_id(language)
         theme = self.get_theme_id(theme)
         query = """ INSERT INTO suggestions
@@ -183,6 +206,31 @@ class BotDataBase:
         VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?,?) """
         self.cursor.execute(query,
                             (name, rating, description, summary, theme, language, people, time, level, technologies))
+        self.db.commit()
+
+    def reject_suggestion(self, id):
+        """
+        Функция удаляет идею из предложки по id
+        :param id:
+        :return:
+        """
+        query = f""" DELETE FROM suggestions WHERE id={id}; """
+        self.cursor.execute(query)
+        self.db.commit()
+
+    def approve_suggestion(self, id):
+        """
+        Функция переносит идею из предложки в основную базу
+        :param id:
+        :return:
+        """
+        query1 = f'''INSERT INTO ideas 
+        (name, rating, description, summary, theme_id, language_id, people, time, level, technologies_id)  
+        SELECT name, rating, description, summary, theme_id, language_id, people, time, level, technologies_id
+        FROM suggestions WHERE suggestions.id = {id};'''
+        query2 = f'''DELETE FROM suggestions WHERE id={id}; '''
+        self.cursor.execute(query1)
+        self.cursor.execute(query2)
         self.db.commit()
 
     def ideas_amount(self) -> int:
@@ -194,12 +242,13 @@ class BotDataBase:
         self.cursor.execute(query)
         return self.cursor.fetchone()[0]
 
+
 if __name__ == "__main__":
     db = BotDataBase('database.db')
     # print(db.is_admin(1234562))
     print(db.search_by_language('Python'))
     print(db.search_by_language('C#; C++'))
-    # print(db.get_by_id(3))
+    db.approve_suggestion(7)
     # db.add_suggestion('Тест 1', 11, 'Описание идеи', 'Краткое описание', 'Backend-разработка', 'Python', 3, 1)
     # db.add('Классная идея 2', 8, 'Описание идеи 2', 'Краткое описание 2',
     # 'Mobile-разработка', 'JavaScript', 3, 2)
