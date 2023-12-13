@@ -13,6 +13,7 @@ result_text = "Спасибо за использование нашего те�
 
 position = 1
 def main_menu():
+    global flag, suggest_position
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     language = types.KeyboardButton(text='Язык программирования')
     number = types.InlineKeyboardButton(text='Количество участников')
@@ -23,8 +24,11 @@ def main_menu():
     list_all = types.InlineKeyboardButton(text='Показать все pet-проекты')
     suggest_idea = types.InlineKeyboardButton(text='Предложить идею')
     markup.add(list_all, suggest_idea)
-    admin_enter = types.InlineKeyboardButton(text='Войти от имени администратора')
+    admin_enter = types.InlineKeyboardButton(text='Войти от имени модератора')
     markup.add(admin_enter)
+    flag = 0
+    suggest_position = 0
+    suggest_list.clear()
     return markup
 
 
@@ -86,6 +90,13 @@ def time_func():
     time.row(back)
     return time
 
+def confirmation():
+    conf = types.InlineKeyboardMarkup()
+    confT = types.InlineKeyboardButton(text="Отправить идею", callback_data='confirmation_true' + str(data[0]))
+    conf.row(confT)
+    confF = types.InlineKeyboardButton(text="Пересоздать заново", callback_data='confirmation_false' + str(data[0]))
+    conf.row(confF)
+    return conf
 
 def database_language(message):
     message = message.replace(' ', '|', 1)
@@ -176,6 +187,15 @@ def call_query(call):
                 position = position - 1
                 bot.delete_message(call.message.chat.id, call.message.id)
                 bot.send_message(call.message.chat.id, get_time(), reply_markup=murkup_all())
+        if call.data == 'confirmation_true':
+            bot.send_message(call.message.chat.id, "Идея отправлена модератору (на самом деле ещё нет)")
+            print("true")
+        if call.data == 'confirmation_false':
+            global flag, suggest_position
+            flag = 1
+            suggest_position = 0
+            suggest_list.clear()
+            bot.send_message(call.message.chat.id, "Введите название вашей идеи")
         if call.data == 'back_message':
             first_mess = f"{call.from_user.first_name} {call.from_user.last_name}, здраствуйте,\n" \
                          f"В нашем телеграм-боте вы сможете найти подходящие вам идеи pet-проектов. Вне зависимости от вашего уровня программирования, вы точно не уйдёте с пустыми руками\n" \
@@ -183,7 +203,15 @@ def call_query(call):
             position = 1
             bot.send_message(call.message.chat.id, first_mess, reply_markup=main_menu())
 
+flag = 0
+suggest_position = 0
+suggest_list = []
 @bot.message_handler(content_types=['text'])
+def marshrutisator(message):
+    if flag == 0:
+        call_message(message)
+    else:
+        suggest_message(message)
 def call_message(message):
     if message.text == 'Язык программирования':
         bot.send_message(message.chat.id, "Выбирете подходящий язык реализации проекта", reply_markup=language_func())
@@ -253,6 +281,10 @@ def call_message(message):
         back = types.InlineKeyboardButton(text='В главное меню', callback_data='back_message')
         db_time.row(back)
         bot.send_message(message.chat.id, text="Или вернитесь в главное меню", reply_markup=db_time)
+    elif message.text == 'Предложить идею':
+        bot.send_message(message.chat.id, "Введите название вашей идеи")
+        global flag
+        flag = 1
     elif message.text == 'Назад':
         first_mess = f"{message.from_user.first_name} {message.from_user.last_name}, здраствуйте,\n" \
                      f"В нашем телеграм-боте вы сможете найти подходящие вам идеи pet-проектов. Вне зависимости от вашего уровня программирования, вы точно не уйдёте с пустыми руками\n" \
@@ -260,8 +292,57 @@ def call_message(message):
         bot.send_message(message.chat.id, first_mess, reply_markup=main_menu())
     else:
         bot.send_message(message.chat.id, "раздел в разработке")
-    # bot.delete_message(message.chat.id, message.message_id)
-    # bot.answer_callback_query(callback_query_id=message.id, show_alert=False)
+def suggest_message(message):
+    global suggest_position
+    if suggest_position == 0:
+        suggest_list.append(message.text)
+        bot.send_message(message.chat.id, "Введите краткое описание")
+        suggest_position = suggest_position + 1
+    elif suggest_position == 1:
+        suggest_list.append(message.text)
+        bot.send_message(message.chat.id, "Введите полное описание")
+        suggest_position = suggest_position + 1
+    elif suggest_position == 2:
+        suggest_list.append(message.text)
+        bot.send_message(message.chat.id, "Введите подходящий язык реализации проекта", reply_markup=language_func())
+        suggest_position = suggest_position + 1
+    elif suggest_position == 3:
+        suggest_list.append(message.text)
+        bot.send_message(message.chat.id, "Введите количество участников проекта", reply_markup=number_func())
+        suggest_position = suggest_position + 1
+    elif suggest_position == 4:
+        suggest_list.append(message.text)
+        bot.send_message(message.chat.id, "Введите подходящий формат разработки", reply_markup=format_func())
+        suggest_position = suggest_position + 1
+    elif suggest_position == 5:
+        suggest_list.append(message.text)
+        bot.send_message(message.chat.id, "Введите срок реализации проекта", reply_markup=time_func())
+        suggest_position = suggest_position + 1
+    elif suggest_position == 6:
+        suggest_list.append(message.text)
+        bot.send_message(message.chat.id, "Введите предлагаемые технологии")
+        suggest_position = suggest_position + 1
+    elif suggest_position == 7:
+        suggest_list.append(message.text)
+        conf = types.InlineKeyboardMarkup()
+        confT = types.InlineKeyboardButton(text="Отправить идею", callback_data='confirmation_true')
+        conf.row(confT)
+        confF = types.InlineKeyboardButton(text="Пересоздать заново", callback_data='confirmation_false')
+        conf.row(confF)
+        confBack = types.InlineKeyboardButton(text="Вернуться в главное меню", callback_data='back_message')
+        conf.row(confBack)
+        bot.send_message(message.chat.id, "Проверьте введённую информацию\n" +
+                         "Название идеи: " + suggest_list[0] + "\n" +
+                         "Краткое описание: " + suggest_list[1] + "\n" +
+                         "Полное описание: " + suggest_list[2] + "\n" +
+                         suggest_list[3] + "\n" +
+                         "Количество участников: " + suggest_list[4] + "\n" +
+                         suggest_list[5] + "\n" +
+                         suggest_list[6] + "\n" +
+                         "Предлагаемые технологии: " + suggest_list[7], reply_markup=conf)
+        suggest_position = suggest_position + 1
+# bot.delete_message(message.chat.id, message.message_id)
+# bot.answer_callback_query(callback_query_id=message.id, show_alert=False)
 
 
 bot.polling()
