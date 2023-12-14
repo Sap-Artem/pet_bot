@@ -220,7 +220,7 @@ class BotDataBase:
 
     def approve_suggestion(self, id):
         """
-        Функция переносит идею из предложки в основную базу
+        Функция переносит идею из предложки в основную базу по id
         :param id:
         :return:
         """
@@ -233,6 +233,15 @@ class BotDataBase:
         self.cursor.execute(query2)
         self.db.commit()
 
+    def get_suggestion(self):
+        """
+        Метод возвращает первую предложенную идею.
+        :return: Вся информация об идее
+        """
+        query = ''' SELECT * FROM suggestions LIMIT 1;'''
+        self.cursor.execute(query)
+        return self.cursor.fetchone()
+
     def ideas_amount(self) -> int:
         """
         Метод возвращает количество идей в БД.
@@ -242,13 +251,22 @@ class BotDataBase:
         self.cursor.execute(query)
         return self.cursor.fetchone()[0]
 
+    def suggestions_amount(self) -> int:
+        """
+        Метод возвращает количество предложенных идей в БД.
+        :return: Число идей в предложке
+        """
+        query = ''' SELECT COUNT(*) FROM suggestions; '''
+        self.cursor.execute(query)
+        return self.cursor.fetchone()[0]
+
 
 if __name__ == "__main__":
     db = BotDataBase('database.db')
     # print(db.is_admin(1234562))
     print(db.search_by_language('Python'))
     print(db.search_by_language('C#; C++'))
-    db.approve_suggestion(7)
+    print(db.get_suggestion())
     # db.add_suggestion('Тест 1', 11, 'Описание идеи', 'Краткое описание', 'Backend-разработка', 'Python', 3, 1)
     # db.add('Классная идея 2', 8, 'Описание идеи 2', 'Краткое описание 2',
     # 'Mobile-разработка', 'JavaScript', 3, 2)
