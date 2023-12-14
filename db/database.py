@@ -8,21 +8,14 @@ class BotDataBase:
 
     def add(self, name='', rating=0, description='', summary='', theme='', language='', people=0, time=0, level=0,
             technologies=''):
-        query = """ INSERT INTO IDEAS
-        (NAME, RATING, DESCRIPTION, SUMMARY, THEME, LANGUAGE_ID, PEOPLE, TIME, LEVEL, TECHNOLOGIES_ID)
-        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?,?) """
+        language = self.get_language_id(language)
+        theme = self.get_theme_id(theme)
+        query = """ INSERT INTO ideas
+                (NAME, RATING, DESCRIPTION, SUMMARY, theme_id, LANGUAGE_ID, PEOPLE, TIME, LEVEL, TECHNOLOGIES_ID)
+                VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?,?) """
         self.cursor.execute(query,
                             (name, rating, description, summary, theme, language, people, time, level, technologies))
         self.db.commit()
-
-    def update(self, id, name, rating, description, summary, theme, language, level, technologies):
-        pass
-
-    def get(self):
-        query = """ SELECT IDEAS.*, TECHNOLOGIES.NAME FROM IDEAS, TECHNOLOGIES WHERE IDEAS.TECHNOLOGIES=TECHNOLOGIES.id; """
-        self.cursor.execute(query)
-        for res in self.cursor:
-            print(res)
 
     def delete(self, id):
         """
@@ -260,13 +253,57 @@ class BotDataBase:
         self.cursor.execute(query)
         return self.cursor.fetchone()[0]
 
+    def get_all_languages(self):
+        """
+        Метод выводит все языки из базы языков программирования.
+        :return: Список из языков
+        """
+        query = ''' SELECT language_name FROM languages; '''
+        self.cursor.execute(query)
+        response = []
+        for element in self.cursor.fetchall():
+            current = element[0]
+            if current:
+                response.append(current)
+        return response
+
+    def get_all_themes(self):
+        """
+        Метод выводит все форматы из базы форматов.
+        :return: Список из форматов
+        """
+        query = ''' SELECT theme_name FROM themes; '''
+        self.cursor.execute(query)
+        response = []
+        for element in self.cursor.fetchall():
+            current = element[0]
+            if current:
+                response.append(current)
+        return response
+
+    def get_all_technologies(self):
+        """
+        Метод выводит все технологии из базы технологий.
+        :return: Список из технологий
+        """
+        query = ''' SELECT technologies.name FROM technologies; '''
+        self.cursor.execute(query)
+        response = []
+        for element in self.cursor.fetchall():
+            current = element[0]
+            if current:
+                response.append(current)
+        return response
+
 
 if __name__ == "__main__":
     db = BotDataBase('database.db')
-    # print(db.is_admin(1234562))
     print(db.search_by_language('Python'))
     print(db.search_by_language('C#; C++'))
-    print(db.get_suggestion())
+    print(db.get_all_languages())
+    print(db.get_all_themes())
+    print(db.get_all_technologies())
+    # db.reject_suggestion(db.get_suggestion()[0])
     # db.add_suggestion('Тест 1', 11, 'Описание идеи', 'Краткое описание', 'Backend-разработка', 'Python', 3, 1)
     # db.add('Классная идея 2', 8, 'Описание идеи 2', 'Краткое описание 2',
     # 'Mobile-разработка', 'JavaScript', 3, 2)
