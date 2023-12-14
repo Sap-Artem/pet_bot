@@ -244,6 +244,15 @@ class BotDataBase:
         self.cursor.execute(query)
         return self.cursor.fetchone()[0]
 
+    def get_all_suggestions(self):
+        """
+        Возвращает список из всех идей из предложки.
+        :return:
+        """
+        query = ''' SELECT * FROM suggestions; '''
+        self.cursor.execute(query)
+        return self.cursor.fetchall()
+
     def suggestions_amount(self) -> int:
         """
         Метод возвращает количество предложенных идей в БД.
@@ -303,6 +312,8 @@ if __name__ == "__main__":
     print(db.get_all_languages())
     print(db.get_all_themes())
     print(db.get_all_technologies())
+    print(db.get_all_suggestions())
+    # db.add_suggestion('123', 1, '222222', '12312312312')
     # db.reject_suggestion(db.get_suggestion()[0])
     # db.add_suggestion('Тест 1', 11, 'Описание идеи', 'Краткое описание', 'Backend-разработка', 'Python', 3, 1)
     # db.add('Классная идея 2', 8, 'Описание идеи 2', 'Краткое описание 2',
