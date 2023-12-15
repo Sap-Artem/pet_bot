@@ -73,7 +73,8 @@ class BotDataBase:
         return response
 
     def search_by_time(self, request):
-        request = request.split(': ')[1]
+        if ':' in request:
+            request = request.split(': ')[1]
         """
         Метод принимает срок выполнения идеи и выводит краткую информацию о всех идеях с этим сроком из БД.
         :param request: Время, как на кнопке.
@@ -193,8 +194,23 @@ class BotDataBase:
         else:
             return 0
 
+    def get_level_id(self, item):
+        """
+        Функция возвращает id формата из базы по названию
+        :param item: название формата
+        :return: id или 0
+        """
+        item = item.split('-')[0]
+        query = f''' SELECT level_id FROM levels WHERE level_name="{item}"; '''
+        self.cursor.execute(query)
+        response = self.cursor.fetchone()
+        if response:
+            return response[0]
+        else:
+            return 0
+
     def add_suggestion(self, name='', rating=0, description='', summary='', theme='', language='', people='', time='',
-                       level=0,
+                       level='',
                        technologies=''):
         """
         Функция принимает информацию из идеи и добавляет ее в предложку
@@ -213,6 +229,7 @@ class BotDataBase:
         theme = self.get_theme_id(theme)
         time = self.get_time_id(time)
         people = self.get_people_id(people)
+        level = self.get_level_id(level)
         query = """ INSERT INTO suggestions
         (NAME, RATING, DESCRIPTION, SUMMARY, theme_id, LANGUAGE_ID, people_id, time_id, level_id, technologies)
         VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?,?) """
@@ -331,8 +348,8 @@ if __name__ == "__main__":
     # print(db.get_by_id(1))
     # db.add_suggestion('123', 1, '222222', '12312312312')
     # db.reject_suggestion(db.get_suggestion()[0])
-    # db.add_suggestion('Тест 1', 11, 'Описание идеи', 'Краткое описание', 'Backend-разработка', 'Python', 'Меньше 3',
-    #                 'Полгода', 1, 'Технологии древних русов')
+    db.add_suggestion('Тест 1', 11, 'Описание идеи', 'Краткое описание', 'Backend-разработка', 'Python', 'Меньше 3',
+                      'Полгода', 'продвинутый', 'Технологии древних русов')
     # db.add('Классная идея 2', 8, 'Описание идеи 2', 'Краткое описание 2',
     # 'Mobile-разработка', 'JavaScript', 3, 2)
     # db.add('Классная идея 3', 7, 'Описание идеи 3', 'Краткое описание 1',
