@@ -8,21 +8,14 @@ class BotDataBase:
 
     def add(self, name='', rating=0, description='', summary='', theme='', language='', people=0, time=0, level=0,
             technologies=''):
-        query = """ INSERT INTO IDEAS
-        (NAME, RATING, DESCRIPTION, SUMMARY, THEME, LANGUAGE_ID, PEOPLE, TIME, LEVEL, TECHNOLOGIES_ID)
-        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?,?) """
+        language = self.get_language_id(language)
+        theme = self.get_theme_id(theme)
+        query = """ INSERT INTO ideas
+                (NAME, RATING, DESCRIPTION, SUMMARY, theme_id, LANGUAGE_ID, people_id, time_id, level, technologies)
+                VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?,?) """
         self.cursor.execute(query,
                             (name, rating, description, summary, theme, language, people, time, level, technologies))
         self.db.commit()
-
-    def update(self, id, name, rating, description, summary, theme, language, level, technologies):
-        pass
-
-    def get(self):
-        query = """ SELECT IDEAS.*, TECHNOLOGIES.NAME FROM IDEAS, TECHNOLOGIES WHERE IDEAS.TECHNOLOGIES=TECHNOLOGIES.id; """
-        self.cursor.execute(query)
-        for res in self.cursor:
-            print(res)
 
     def delete(self, id):
         """
@@ -42,7 +35,6 @@ class BotDataBase:
         self.db.commit()
 
     def search_by_language(self, lang_str):
-        print(lang_str)
         """
         Метод принимает язык программирования и выводит краткую информацию о всех идеях с этим языком программирования из БД.
         :param lang_str:
@@ -59,21 +51,15 @@ class BotDataBase:
             response += [res for res in self.cursor]
         return response
 
-    def search_by_people(self, people_number: str):
+    def search_by_people(self, request: str):
         """
         Метод принимает кол-во участников и выводит краткую информацию о всех идеях с этим кол-вом участников из БД.
-        :param people_number: Кол-во участников, как на кнопке.
+        :param request: Кол-во участников, как на кнопке.
         :return: Список из id, name, summary каждой идеи.
         """
-        if people_number == "1 человек":
-            request = '=1'
-        elif people_number == "2 человека":
-            request = '=2'
-        elif people_number == "3-8 человек":
-            request = ' >2 AND IDEAS.PEOPLE < 9'
-        elif people_number == "более 8 человек":
-            request = '>8'
-        query = f''' SELECT IDEAS.ID, IDEAS.NAME, IDEAS.SUMMARY FROM IDEAS WHERE IDEAS.PEOPLE{request};  '''
+        query = f'''    SELECT ideas.id, ideas.name, ideas.summary, people.people_id FROM IDEAS
+                                INNER JOIN people ON people.people_id = ideas.people_id
+                                WHERE people_name="{request}";  '''
         self.cursor.execute(query)
         response = [res for res in self.cursor]
         return response
@@ -90,21 +76,15 @@ class BotDataBase:
         response = [res for res in self.cursor]
         return response
 
-    def search_by_time(self, time: str):
+    def search_by_time(self, request):
         """
         Метод принимает срок выполнения идеи и выводит краткую информацию о всех идеях с этим сроком из БД.
-        :param time: Время, как на кнопке.
+        :param request: Время, как на кнопке.
         :return: Список из id, name, summary каждой идеи.
         """
-        if time == "срок: меньше недели":
-            request = '<7'
-        elif time == "срок: от недели до месяца":
-            request = ' >6 AND IDEAS.time < 32'
-        elif time == "срок: от месяца до полугода":
-            request = ' >31 AND IDEAS.time < 183'
-        elif time == "срок: более полугода":
-            request = '>182'
-        query = f''' SELECT IDEAS.ID, IDEAS.NAME, IDEAS.SUMMARY FROM IDEAS WHERE IDEAS.time{request};  '''
+        query = f'''    SELECT ideas.id, ideas.name, ideas.summary, times.time_name FROM IDEAS
+                        INNER JOIN times ON times.time_id = ideas.language_id
+                        WHERE time_name="{request}";  '''
         self.cursor.execute(query)
         response = [res for res in self.cursor]
         return response
@@ -116,10 +96,11 @@ class BotDataBase:
         :return: id, name, rating, description, summary, theme, language, level, technologies_id, technologies_name
         """
         query = f''' 
-            SELECT ideas.name, ideas.rating, ideas.description, themes.theme_name, ideas.people, ideas.time, languages.language_name, ideas.level, technologies.name FROM IDEAS
+            SELECT ideas.name, ideas.rating, ideas.description, themes.theme_name, people.people_name, times.time_name, languages.language_name, ideas.level, ideas.technologies FROM IDEAS
             INNER JOIN languages ON languages.language_id = ideas.language_id
             INNER JOIN themes ON themes.id = ideas.theme_id
-            INNER JOIN technologies ON technologies.id = ideas.technologies_id
+            INNER JOIN times ON times.time_id = ideas.time_id
+            INNER JOIN people ON people.people_id = ideas.people_id
             WHERE IDEAS.id={idea_id}
             '''
         self.cursor.execute(query)
@@ -140,7 +121,7 @@ class BotDataBase:
             flag_amount = ' LIMIT ' + str(n)
         if reverse:
             flag_reverse = ' ORDER BY id DESC '
-        query = f''' SELECT IDEAS.ID, IDEAS.NAME, IDEAS.SUMMARY FROM IDEAS{flag_reverse}{flag_amount};  '''
+        query = f''' SELECT id, name, summary FROM ideas{flag_reverse}{flag_amount};  '''
         self.cursor.execute(query)
         response = [res for res in self.cursor]
         return response
@@ -151,7 +132,7 @@ class BotDataBase:
         :param check_id: Проверяемый id
         :return: True, если id админский, False, если нет.
         """
-        query = ''' SELECT * FROM admin_id; '''
+        query = ''' SELECT * FROM admins; '''
         self.cursor.execute(query)
         response = self.cursor.fetchall()
         return check_id in [item[0] for item in response]
@@ -165,9 +146,29 @@ class BotDataBase:
         query = f''' SELECT language_id FROM languages WHERE language_name="{item}"; '''
         self.cursor.execute(query)
         response = self.cursor.fetchone()
-        if response:
-            return response[0]
-        return 0
+        return response[0]
+
+    def get_people_id(self, item):
+        """
+        Функция возвращает id кол-ва людей из базы по тексту
+        :param item: текст кол-ва людей
+        :return: id или 0
+        """
+        query = f''' SELECT people_id FROM people WHERE people_name="{item}"; '''
+        self.cursor.execute(query)
+        response = self.cursor.fetchone()
+        return response[0]
+
+    def get_time_id(self, item):
+        """
+        Функция возвращает id времени из базы по тексту
+        :param item: текст времени
+        :return: id или 0
+        """
+        query = f''' SELECT time_id FROM times WHERE time_name="{item}"; '''
+        self.cursor.execute(query)
+        response = self.cursor.fetchone()
+        return response[0]
 
     def get_theme_id(self, item):
         """
@@ -179,11 +180,9 @@ class BotDataBase:
         query = f''' SELECT id FROM themes WHERE theme_name="{item}"; '''
         self.cursor.execute(query)
         response = self.cursor.fetchone()
-        if response:
-            return response[0]
-        return 0
+        return response[0]
 
-    def add_suggestion(self, name='', rating=0, description='', summary='', theme='', language='', people=0, time=0,
+    def add_suggestion(self, name='', rating=0, description='', summary='', theme='', language='', people='', time='',
                        level=0,
                        technologies=''):
         """
@@ -201,8 +200,10 @@ class BotDataBase:
         """
         language = self.get_language_id(language)
         theme = self.get_theme_id(theme)
+        time = self.get_time_id(time)
+        people = self.get_people_id(people)
         query = """ INSERT INTO suggestions
-        (NAME, RATING, DESCRIPTION, SUMMARY, theme_id, LANGUAGE_ID, PEOPLE, TIME, LEVEL, TECHNOLOGIES_ID)
+        (NAME, RATING, DESCRIPTION, SUMMARY, theme_id, LANGUAGE_ID, people_id, time_id, LEVEL, technologies)
         VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?,?) """
         self.cursor.execute(query,
                             (name, rating, description, summary, theme, language, people, time, level, technologies))
@@ -220,18 +221,27 @@ class BotDataBase:
 
     def approve_suggestion(self, id):
         """
-        Функция переносит идею из предложки в основную базу
+        Функция переносит идею из предложки в основную базу по id
         :param id:
         :return:
         """
         query1 = f'''INSERT INTO ideas 
-        (name, rating, description, summary, theme_id, language_id, people, time, level, technologies_id)  
-        SELECT name, rating, description, summary, theme_id, language_id, people, time, level, technologies_id
+        (name, rating, description, summary, theme_id, language_id, people_id, time_id, level, technologies)  
+        SELECT name, rating, description, summary, theme_id, language_id, people_id, time_id, level, technologies
         FROM suggestions WHERE suggestions.id = {id};'''
         query2 = f'''DELETE FROM suggestions WHERE id={id}; '''
         self.cursor.execute(query1)
         self.cursor.execute(query2)
         self.db.commit()
+
+    def get_suggestion(self):
+        """
+        Метод возвращает первую предложенную идею.
+        :return: Вся информация об идее
+        """
+        query = ''' SELECT * FROM suggestions LIMIT 1;'''
+        self.cursor.execute(query)
+        return self.cursor.fetchone()
 
     def ideas_amount(self) -> int:
         """
@@ -242,14 +252,73 @@ class BotDataBase:
         self.cursor.execute(query)
         return self.cursor.fetchone()[0]
 
+    def get_all_suggestions(self):
+        """
+        Возвращает список из всех идей из предложки.
+        :return:
+        """
+        query = f''' 
+                    SELECT suggestions.name, suggestions.rating, suggestions.description, themes.theme_name, people.people_name, times.time_name, languages.language_name, suggestions.level, suggestions.technologies FROM suggestions
+                    INNER JOIN languages ON languages.language_id = suggestions.language_id
+                    INNER JOIN themes ON themes.id = suggestions.theme_id
+                    INNER JOIN times ON times.time_id = suggestions.time_id
+                    INNER JOIN people ON people.people_id = suggestions.people_id
+                    '''
+        self.cursor.execute(query)
+        return self.cursor.fetchall()
+
+    def suggestions_amount(self) -> int:
+        """
+        Метод возвращает количество предложенных идей в БД.
+        :return: Число идей в предложке
+        """
+        query = ''' SELECT COUNT(*) FROM suggestions; '''
+        self.cursor.execute(query)
+        return self.cursor.fetchone()[0]
+
+    def get_all_languages(self):
+        """
+        Метод выводит все языки из базы языков программирования.
+        :return: Список из языков
+        """
+        query = ''' SELECT language_name FROM languages; '''
+        self.cursor.execute(query)
+        response = []
+        for element in self.cursor.fetchall():
+            current = element[0]
+            if current:
+                response.append(current)
+        return response
+
+    def get_all_themes(self):
+        """
+        Метод выводит все форматы из базы форматов.
+        :return: Список из форматов
+        """
+        query = ''' SELECT theme_name FROM themes; '''
+        self.cursor.execute(query)
+        response = []
+        for element in self.cursor.fetchall():
+            current = element[0]
+            if current:
+                response.append(current)
+        return response
+
 
 if __name__ == "__main__":
     db = BotDataBase('database.db')
-    # print(db.is_admin(1234562))
-    print(db.search_by_language('Python'))
-    print(db.search_by_language('C#; C++'))
-    db.approve_suggestion(7)
-    # db.add_suggestion('Тест 1', 11, 'Описание идеи', 'Краткое описание', 'Backend-разработка', 'Python', 3, 1)
+    # print(db.search_by_language('Python'))
+    # print(db.search_by_language('C#; C++'))
+    # print(db.get_all_languages())
+    # print(db.get_all_themes())
+    print(db.get_all_suggestions())
+    print(db.search_by_time('Полгода'))
+    print(db.search_by_people('Меньше 3'))
+    # print(db.get_by_id(1))
+    # db.add_suggestion('123', 1, '222222', '12312312312')
+    # db.reject_suggestion(db.get_suggestion()[0])
+    # db.add_suggestion('Тест 1', 11, 'Описание идеи', 'Краткое описание', 'Backend-разработка', 'Python', 'Меньше 3',
+    #                 'Полгода', 1, 'Технологии древних русов')
     # db.add('Классная идея 2', 8, 'Описание идеи 2', 'Краткое описание 2',
     # 'Mobile-разработка', 'JavaScript', 3, 2)
     # db.add('Классная идея 3', 7, 'Описание идеи 3', 'Краткое описание 1',
