@@ -34,21 +34,16 @@ class BotDataBase:
         self.cursor.execute(query)
         self.db.commit()
 
-    def search_by_language(self, lang_str):
+    def search_by_language(self, request):
         """
         Метод принимает язык программирования и выводит краткую информацию о всех идеях с этим языком программирования из БД.
-        :param lang_str:
+        :param request:
         :return: Список из id, name, summary каждой идеи.
         """
-        if ';' in lang_str:
-            languages = lang_str.split('; ')
-        else:
-            languages = [lang_str]
-        response = []
-        for language in languages:
-            query = f''' SELECT ideas.id, ideas.name, ideas.summary, language_name FROM ideas JOIN languages ON languages.language_id = ideas.language_id WHERE language_name="{language}";  '''
-            self.cursor.execute(query)
-            response += [res for res in self.cursor]
+        request = request.split(': ')[1]
+        query = f''' SELECT ideas.id, ideas.name, ideas.summary, language_name FROM ideas JOIN languages ON languages.language_id = ideas.language_id WHERE language_name="{request}";  '''
+        self.cursor.execute(query)
+        response = [res for res in self.cursor]
         return response
 
     def search_by_people(self, request: str):
@@ -65,6 +60,7 @@ class BotDataBase:
         return response
 
     def search_by_format(self, request: str):
+        request = request.split(': ')[1]
         """
         Метод принимает формат (тему) идеи и выводит краткую информацию о всех идеях с этим форматом из БД.
         :param request: Формат, как на кнопке.
@@ -77,6 +73,7 @@ class BotDataBase:
         return response
 
     def search_by_time(self, request):
+        request = request.split(': ')[1]
         """
         Метод принимает срок выполнения идеи и выводит краткую информацию о всех идеях с этим сроком из БД.
         :param request: Время, как на кнопке.

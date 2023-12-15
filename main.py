@@ -12,6 +12,8 @@ result_text = "Спасибо за использование нашего те�
               "Ниже представлены наиболее подходящие pet-проекты согласно предоставленной информации"
 
 position = 1
+
+
 def main_menu():
     global flag, suggest_position
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -90,6 +92,7 @@ def time_func():
     time.row(back)
     return time
 
+
 def confirmation():
     conf = types.InlineKeyboardMarkup()
     confT = types.InlineKeyboardButton(text="Отправить идею", callback_data='confirmation_true' + str(data[0]))
@@ -98,10 +101,10 @@ def confirmation():
     conf.row(confF)
     return conf
 
+
 def database_language(message):
-    message = message.replace(' ', '|', 1)
     db = database.BotDataBase('db/database.db')
-    answer = db.search_by_language(message.split('|')[1].split('; '))
+    answer = db.search_by_language(message)
     return answer
 
 
@@ -113,7 +116,7 @@ def database_number(message):
 
 def database_format(message):
     db = database.BotDataBase('db/database.db')
-    answer = db.search_by_format(message[13:])
+    answer = db.search_by_format(message)
     return answer
 
 
@@ -122,24 +125,31 @@ def database_time(message):
     answer = db.search_by_time(message)
     return answer
 
+
 def database_all():
     db = database.BotDataBase('db/database.db')
     answer = db.get_all()
     return answer
+
+
 def murkup_all():
     list = database_all()
     db = types.InlineKeyboardMarkup()
-    for i in range ((position-1)*5,position*5):
-        if i<len(list):
-            project = types.InlineKeyboardButton(text=list[i][1] + " - " + list[i][2], callback_data='project_' + str(list[i][0]))
+    for i in range((position - 1) * 5, position * 5):
+        if i < len(list):
+            project = types.InlineKeyboardButton(text=list[i][1] + " - " + list[i][2],
+                                                 callback_data='project_' + str(list[i][0]))
             db.row(project)
     left = types.InlineKeyboardButton(text='<', callback_data='left_message')
-    pos = types.InlineKeyboardButton(text=str(position) + '/'+ str(math.ceil(len(list)/5)), callback_data='pos_message')
+    pos = types.InlineKeyboardButton(text=str(position) + '/' + str(math.ceil(len(list) / 5)),
+                                     callback_data='pos_message')
     right = types.InlineKeyboardButton(text='>', callback_data='right_message')
     db.row(left, pos, right)
     back = types.InlineKeyboardButton(text='В главное меню', callback_data='back_message')
     db.row(back)
     return db
+
+
 def get_time():
     all_time = str(datetime.datetime.now())
     years = all_time[0:4]
@@ -147,6 +157,7 @@ def get_time():
     day = all_time[8:10]
     time = all_time[10:19]
     return "Все pet-проекты загруженные до" + time + " " + day + "." + month + "." + years
+
 
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -178,7 +189,7 @@ def call_query(call):
             bot.send_message(call.message.chat.id, string, reply_markup=db)
         if call.data == 'right_message':
             db = database.BotDataBase('db/database.db')
-            if db.ideas_amount() > position*5:
+            if db.ideas_amount() > position * 5:
                 position = position + 1
                 bot.delete_message(call.message.chat.id, call.message.id)
                 bot.send_message(call.message.chat.id, get_time(), reply_markup=murkup_all())
@@ -203,15 +214,20 @@ def call_query(call):
             position = 1
             bot.send_message(call.message.chat.id, first_mess, reply_markup=main_menu())
 
+
 flag = 0
 suggest_position = 0
 suggest_list = []
+
+
 @bot.message_handler(content_types=['text'])
 def marshrutisator(message):
     if flag == 0:
         call_message(message)
     else:
         suggest_message(message)
+
+
 def call_message(message):
     if message.text == 'Язык программирования':
         bot.send_message(message.chat.id, "Выбирете подходящий язык реализации проекта", reply_markup=language_func())
@@ -292,6 +308,8 @@ def call_message(message):
         bot.send_message(message.chat.id, first_mess, reply_markup=main_menu())
     else:
         bot.send_message(message.chat.id, "раздел в разработке")
+
+
 def suggest_message(message):
     global suggest_position
     if suggest_position == 0:
@@ -341,6 +359,8 @@ def suggest_message(message):
                          suggest_list[6] + "\n" +
                          "Предлагаемые технологии: " + suggest_list[7], reply_markup=conf)
         suggest_position = suggest_position + 1
+
+
 # bot.delete_message(message.chat.id, message.message_id)
 # bot.answer_callback_query(callback_query_id=message.id, show_alert=False)
 
