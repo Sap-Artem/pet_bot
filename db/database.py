@@ -11,7 +11,7 @@ class BotDataBase:
         language = self.get_language_id(language)
         theme = self.get_theme_id(theme)
         query = """ INSERT INTO ideas
-                (NAME, RATING, DESCRIPTION, SUMMARY, theme_id, LANGUAGE_ID, people_id, time_id, level, technologies)
+                (NAME, RATING, DESCRIPTION, SUMMARY, theme_id, LANGUAGE_ID, people_id, time_id, level_id, technologies)
                 VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?,?) """
         self.cursor.execute(query,
                             (name, rating, description, summary, theme, language, people, time, level, technologies))
@@ -93,11 +93,12 @@ class BotDataBase:
         :return: id, name, rating, description, summary, theme, language, level, technologies_id, technologies_name
         """
         query = f''' 
-            SELECT ideas.name, ideas.rating, ideas.description, themes.theme_name, people.people_name, times.time_name, languages.language_name, ideas.level, ideas.technologies FROM IDEAS
+            SELECT ideas.name, ideas.rating, ideas.description, themes.theme_name, people.people_name, times.time_name, languages.language_name, levels.level_name, ideas.technologies FROM IDEAS
             INNER JOIN languages ON languages.language_id = ideas.language_id
             INNER JOIN themes ON themes.id = ideas.theme_id
             INNER JOIN times ON times.time_id = ideas.time_id
             INNER JOIN people ON people.people_id = ideas.people_id
+            INNER JOIN levels ON levels.level_id = ideas.level_id
             WHERE IDEAS.id={idea_id}
             '''
         self.cursor.execute(query)
@@ -213,7 +214,7 @@ class BotDataBase:
         time = self.get_time_id(time)
         people = self.get_people_id(people)
         query = """ INSERT INTO suggestions
-        (NAME, RATING, DESCRIPTION, SUMMARY, theme_id, LANGUAGE_ID, people_id, time_id, level, technologies)
+        (NAME, RATING, DESCRIPTION, SUMMARY, theme_id, LANGUAGE_ID, people_id, time_id, level_id, technologies)
         VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?,?) """
         self.cursor.execute(query,
                             (name, rating, description, summary, theme, language, people, time, level, technologies))
@@ -237,8 +238,8 @@ class BotDataBase:
         :return:
         """
         query1 = f'''INSERT INTO ideas 
-        (name, rating, description, summary, theme_id, language_id, people_id, time_id, level, technologies)  
-        SELECT name, {rating}, description, summary, theme_id, language_id, people_id, time_id, level, technologies
+        (name, rating, description, summary, theme_id, language_id, people_id, time_id, level_id, technologies)  
+        SELECT name, {rating}, description, summary, theme_id, language_id, people_id, time_id, level_id, technologies
         FROM suggestions WHERE suggestions.id = {id};'''
         query2 = f'''DELETE FROM suggestions WHERE id={id}; '''
         self.cursor.execute(query1)
@@ -269,12 +270,13 @@ class BotDataBase:
         :return:
         """
         query = f''' 
-                    SELECT suggestions.name, suggestions.rating, suggestions.description, themes.theme_name, people.people_name, times.time_name, languages.language_name, suggestions.level, suggestions.technologies FROM suggestions
+                    SELECT suggestions.name, suggestions.rating, suggestions.description, themes.theme_name, people.people_name, times.time_name, languages.language_name, levels.level_name, suggestions.technologies FROM suggestions
                     INNER JOIN languages ON languages.language_id = suggestions.language_id
                     INNER JOIN themes ON themes.id = suggestions.theme_id
                     INNER JOIN times ON times.time_id = suggestions.time_id
                     INNER JOIN people ON people.people_id = suggestions.people_id
-                    '''
+                    INNER JOIN levels ON levels.level_id = suggestions.level_id
+                '''
         self.cursor.execute(query)
         return self.cursor.fetchall()
 
