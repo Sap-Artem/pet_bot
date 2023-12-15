@@ -6,7 +6,7 @@ import datetime
 
 from db import database
 
-bot = telebot.TeleBot('6767523338:AAHCT-k6OvYwOBGzikc71QgfW75A9XxOEYM')
+bot = telebot.TeleBot('6477090725:AAEN90WQ4mJ9rtebUl11eaHNJv2v3daymUg')
 
 result_text = "Спасибо за использование нашего телеграм-бота!\n" \
               "Ниже представлены наиболее подходящие pet-проекты согласно предоставленной информации"
@@ -163,15 +163,15 @@ def call_query(call):
         if call.data[0:7] == 'project':
             info_db = database.BotDataBase('db/database.db')
             data = info_db.get_by_id(int(call.data.split('_')[1]))
-            string = "Название проекта: " + str(data[1]) + "\n" + \
-                     "Рейтинг: " + str(data[2]) + "\n" + \
-                     "Описание: " + str(data[3]) + "\n" + \
-                     "Направление: " + str(data[5]) + "\n" + \
-                     "Количество участников: " + str(data[7]) + "\n" + \
-                     "Сроки реализации: " + format_day(data[8]) + "\n" + \
+            string = "Название проекта: " + str(data[0]) + "\n" + \
+                     "Рейтинг: " + str(data[1]) + "\n" + \
+                     "Описание: " + str(data[2]) + "\n" + \
+                     "Направление: " + str(data[3]) + "\n" + \
+                     "Количество участников: " + str(data[4]) + "\n" + \
+                     "Сроки реализации: " + format_day(data[5]) + "\n" + \
                      "Язык программирования: " + str(data[6]) + "\n" + \
-                     "Сложность: " + str(data[9]) + '/10' + "\n" + \
-                     "Предлагаемые технологии: " + str(data[11]) + "\n"
+                     "Сложность: " + str(data[7]) + '/10' + "\n" + \
+                     "Предлагаемые технологии: " + str(data[8]) + "\n"
             db = types.InlineKeyboardMarkup()
             back = types.InlineKeyboardButton(text='В главное меню', callback_data='back_message')
             db.row(back)

@@ -105,6 +105,7 @@ class BotDataBase:
             '''
         self.cursor.execute(query)
         response = self.cursor.fetchone()
+        print(response, idea_id)
         return response
 
     def get_all(self, n=None, reverse=False):
