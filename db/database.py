@@ -147,7 +147,10 @@ class BotDataBase:
         query = f''' SELECT language_id FROM languages WHERE language_name="{item}"; '''
         self.cursor.execute(query)
         response = self.cursor.fetchone()
-        return response[0]
+        if response:
+            return response[0]
+        else:
+            return 0
 
     def get_people_id(self, item):
         """
@@ -158,7 +161,10 @@ class BotDataBase:
         query = f''' SELECT people_id FROM people WHERE people_name="{item}"; '''
         self.cursor.execute(query)
         response = self.cursor.fetchone()
-        return response[0]
+        if response:
+            return response[0]
+        else:
+            return 0
 
     def get_time_id(self, item):
         """
@@ -169,7 +175,10 @@ class BotDataBase:
         query = f''' SELECT time_id FROM times WHERE time_name="{item}"; '''
         self.cursor.execute(query)
         response = self.cursor.fetchone()
-        return response[0]
+        if response:
+            return response[0]
+        else:
+            return 0
 
     def get_theme_id(self, item):
         """
@@ -181,7 +190,10 @@ class BotDataBase:
         query = f''' SELECT id FROM themes WHERE theme_name="{item}"; '''
         self.cursor.execute(query)
         response = self.cursor.fetchone()
-        return response[0]
+        if response:
+            return response[0]
+        else:
+            return 0
 
     def add_suggestion(self, name='', rating=0, description='', summary='', theme='', language='', people='', time='',
                        level=0,
@@ -204,7 +216,7 @@ class BotDataBase:
         time = self.get_time_id(time)
         people = self.get_people_id(people)
         query = """ INSERT INTO suggestions
-        (NAME, RATING, DESCRIPTION, SUMMARY, theme_id, LANGUAGE_ID, people_id, time_id, LEVEL, technologies)
+        (NAME, RATING, DESCRIPTION, SUMMARY, theme_id, LANGUAGE_ID, people_id, time_id, level, technologies)
         VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?,?) """
         self.cursor.execute(query,
                             (name, rating, description, summary, theme, language, people, time, level, technologies))
@@ -220,15 +232,16 @@ class BotDataBase:
         self.cursor.execute(query)
         self.db.commit()
 
-    def approve_suggestion(self, id):
+    def approve_suggestion(self, id, rating: int):
         """
-        Функция переносит идею из предложки в основную базу по id
-        :param id:
+        Функция переносит идею из предложки в основную базу по id и добавляет к ней рейтинг от модератора.
+        :param rating: Рейтинг в числовом виде от 1 до 10 от модератора.
+        :param id: id идеи
         :return:
         """
         query1 = f'''INSERT INTO ideas 
         (name, rating, description, summary, theme_id, language_id, people_id, time_id, level, technologies)  
-        SELECT name, rating, description, summary, theme_id, language_id, people_id, time_id, level, technologies
+        SELECT name, {rating}, description, summary, theme_id, language_id, people_id, time_id, level, technologies
         FROM suggestions WHERE suggestions.id = {id};'''
         query2 = f'''DELETE FROM suggestions WHERE id={id}; '''
         self.cursor.execute(query1)
@@ -315,6 +328,7 @@ if __name__ == "__main__":
     print(db.get_all_suggestions())
     print(db.search_by_time('Полгода'))
     print(db.search_by_people('Меньше 3'))
+    # db.approve_suggestion(1, 9)
     # print(db.get_by_id(1))
     # db.add_suggestion('123', 1, '222222', '12312312312')
     # db.reject_suggestion(db.get_suggestion()[0])
