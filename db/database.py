@@ -40,6 +40,7 @@ class BotDataBase:
         :param request:
         :return: Список из id, name, summary каждой идеи.
         """
+        request = request.split(': ')[1]
         query = f''' SELECT ideas.id, ideas.name, ideas.summary, language_name FROM ideas JOIN languages ON languages.language_id = ideas.language_id WHERE language_name="{request}";  '''
         self.cursor.execute(query)
         response = [res for res in self.cursor]
@@ -59,11 +60,13 @@ class BotDataBase:
         return response
 
     def search_by_format(self, request: str):
+        request = request.split(': ')[1]
         """
         Метод принимает формат (тему) идеи и выводит краткую информацию о всех идеях с этим форматом из БД.
         :param request: Формат, как на кнопке.
         :return: Список из id, name, summary каждой идеи.
         """
+        request = request.split('-')[0]
         query = f''' SELECT IDEAS.ID, IDEAS.NAME, IDEAS.SUMMARY FROM IDEAS JOIN themes ON themes.id = ideas.theme_id WHERE theme_name="{request}";  '''
         self.cursor.execute(query)
         response = [res for res in self.cursor]
@@ -140,7 +143,6 @@ class BotDataBase:
         :param item: название языка
         :return: id или 0
         """
-        item = item.split(" ")[1]
         query = f''' SELECT language_id FROM languages WHERE language_name="{item}"; '''
         self.cursor.execute(query)
         response = self.cursor.fetchone()
@@ -169,7 +171,6 @@ class BotDataBase:
         :param item: текст времени
         :return: id или 0
         """
-        item = item[6:]
         query = f''' SELECT time_id FROM times WHERE time_name="{item}"; '''
         self.cursor.execute(query)
         response = self.cursor.fetchone()
@@ -184,7 +185,7 @@ class BotDataBase:
         :param item: название формата
         :return: id или 0
         """
-        item = item[13:]
+        item = item.split('-')[0]
         query = f''' SELECT id FROM themes WHERE theme_name="{item}"; '''
         self.cursor.execute(query)
         response = self.cursor.fetchone()
@@ -195,11 +196,10 @@ class BotDataBase:
 
     def get_level_id(self, item):
         """
-        Функция возвращает id формата из базы по названию
-        :param item: название формата
+        Функция возвращает id уровня из базы по названию
+        :param item: название уровня
         :return: id или 0
         """
-        item = item.split('-')[0]
         query = f''' SELECT level_id FROM levels WHERE level_name="{item}"; '''
         self.cursor.execute(query)
         response = self.cursor.fetchone()
@@ -333,6 +333,76 @@ class BotDataBase:
                 response.append(current)
         return response
 
+    def get_language(self, id):
+        """
+        Функция возвращает название языка из базы по id
+        :param id:
+        :return: название
+        """
+        query = f''' SELECT language_name FROM languages WHERE language_id={id}; '''
+        self.cursor.execute(query)
+        response = self.cursor.fetchone()
+        if response:
+            return response[0]
+        else:
+            return '-'
+
+    def get_people(self, id):
+        """
+        Функция возвращает кол-во людей из базы по id
+        :param id:
+        :return: кол-во людей
+        """
+        query = f''' SELECT people_name FROM people WHERE people_id={id}; '''
+        self.cursor.execute(query)
+        response = self.cursor.fetchone()
+        if response:
+            return response[0]
+        else:
+            return '-'
+
+    def get_time(self, id):
+        """
+        Функция возвращает название времени из базы по id
+        :param id:
+        :return: название
+        """
+        query = f''' SELECT time_name FROM times WHERE time_id={id}; '''
+        self.cursor.execute(query)
+        response = self.cursor.fetchone()
+        if response:
+            return response[0]
+        else:
+            return '-'
+
+    def get_theme(self, id):
+        """
+        Функция возвращает название формата из базы по id
+        :param id:
+        :return: название
+        """
+        query = f''' SELECT theme_name FROM themes WHERE id={id}; '''
+        self.cursor.execute(query)
+        response = self.cursor.fetchone()
+        if response:
+            return response[0]
+        else:
+            return '-'
+
+    def get_level(self, id):
+        """
+        Функция возвращает название уровня из базы по id
+        :param id:
+        :return: название
+        """
+        query = f''' SELECT level_name FROM levels WHERE level_id={id}; '''
+        self.cursor.execute(query)
+        response = self.cursor.fetchone()
+        if response:
+            return response[0]
+        else:
+            return '-'
+
 
 if __name__ == "__main__":
     db = BotDataBase('database.db')
@@ -340,15 +410,17 @@ if __name__ == "__main__":
     # print(db.search_by_language('C#; C++'))
     # print(db.get_all_languages())
     # print(db.get_all_themes())
-    #print(db.get_all_suggestions())
-    #print(db.search_by_time('Полгода'))
-    #print(db.search_by_people('Меньше 3'))
-    #print(db.search_by_format("только Frontend-разработка"))
+    print(db.get_language(1))
+    print(db.get_level(1))
+    print(db.get_theme(1))
+    print(db.get_people(1))
+    print(db.get_time(1))
     # db.approve_suggestion(1, 9)
     # print(db.get_by_id(1))
     # db.add_suggestion('123', 1, '222222', '12312312312')
     # db.reject_suggestion(db.get_suggestion()[0])
-    #db.add_suggestion('Тест 1', 11, 'Описание идеи', 'Краткое описание', 'Backend-разработка', 'Python', 'Меньше 3', 'Полгода', 'продвинутый', 'Технологии древних русов')
+    # db.add_suggestion('Тест 1', 11, 'Описание идеи', 'Краткое описание', 'Backend-разработка', 'Python', 'Меньше 3',
+                      # 'Полгода', 'продвинутый', 'Технологии древних русов')
     # db.add('Классная идея 2', 8, 'Описание идеи 2', 'Краткое описание 2',
     # 'Mobile-разработка', 'JavaScript', 3, 2)
     # db.add('Классная идея 3', 7, 'Описание идеи 3', 'Краткое описание 1',
