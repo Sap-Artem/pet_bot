@@ -188,19 +188,19 @@ def call_query(call):
             info_db = database.BotDataBase('db/database.db')
             data = info_db.get_by_id(int(call.data.split('_')[1]))
             print(data)
-            string = "Название проекта: " + str(data[0]) + "\n" + \
-                     "Рейтинг: " + str(data[1]) + "\n" + \
-                     "Описание: " + str(data[2]) + "\n" + \
-                     "Направление: " + str(data[3]) + "\n" + \
-                     "Количество участников: " + str(data[4]) + "\n" + \
-                     "Сроки реализации: " + str(data[5]) + "\n" + \
-                     "Язык программирования: " + str(data[6]) + "\n" + \
-                     "Сложность: " + str(data[7]) + "\n" + \
-                     "Предлагаемые технологии: " + str(data[8]) + "\n"
+            string = "🔘<b><u>Название проекта:</u></b> " + str(data[0]) + "\n" + \
+                     "🔘<b><u>Рейтинг:</u></b> " + str(data[1]) + "\n" + \
+                     "🔘<b><u>Описание:</u></b> " + str(data[2]) + "\n" + \
+                     "🔘<b><u>Направление:</u></b> " + str(data[3]) + "\n" + \
+                     "🔘<b><u>Количество участников:</u></b> " + str(data[4]) + "\n" + \
+                     "🔘<b><u>Сроки реализации:</u></b> " + str(data[5]) + "\n" + \
+                     "🔘<b><u>Язык программирования:</u></b> " + str(data[6]) + "\n" + \
+                     "🔘<b><u>Сложность:</u></b> " + str(data[7]) + "\n" + \
+                     "🔘<b><u>Предлагаемые технологии:</u></b> " + str(data[8]) + "\n"
             db = types.InlineKeyboardMarkup()
             back = types.InlineKeyboardButton(text='В главное меню', callback_data='back_message')
             db.row(back)
-            bot.send_message(call.message.chat.id, string, reply_markup=db)
+            bot.send_message(call.message.chat.id, string, reply_markup=db, parse_mode="html")
         if call.data == 'right_message':
             if db.ideas_amount() > position * 5:
                 position = position + 1
