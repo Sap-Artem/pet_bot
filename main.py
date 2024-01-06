@@ -189,12 +189,14 @@ def call_message(message):
         bot.send_message(message.chat.id, result_text)
         list = database_language(message.text)
         i = 0
-        while i<len(list):
+        while i < len(list):
             db = types.InlineKeyboardMarkup()
             project = types.InlineKeyboardButton(text=list[i+1], callback_data='project_'+str(list[i]))
             db.row(project)
             bot.send_message(message.chat.id, list[i+1] + "\n" + list[i+2], parse_mode='Markdown', reply_markup=db)
             i = i + 3
+        if len(list) == 0:
+            bot.send_message(message.chat.id, "Не найдено ни одного pet-проекта. Попробуйте изменить параметры посика.")
         db_language = types.InlineKeyboardMarkup()
         back = types.InlineKeyboardButton(text='В главное меню', callback_data='back_message')
         db_language.row(back)
@@ -209,6 +211,8 @@ def call_message(message):
             db.row(project)
             bot.send_message(message.chat.id, list[i+1] + "\n" + list[i + 2], parse_mode='Markdown', reply_markup=db)
             i = i + 3
+        if len(list) == 0:
+            bot.send_message(message.chat.id, "Не найдено ни одного pet-проекта. Попробуйте изменить параметры посика.")
         db_number = types.InlineKeyboardMarkup()
         back = types.InlineKeyboardButton(text='В главное меню', callback_data='back_message')
         db_number.row(back)
@@ -223,6 +227,8 @@ def call_message(message):
             db.row(project)
             bot.send_message(message.chat.id, list[i+1] + "\n" + list[i + 2], parse_mode='Markdown', reply_markup=db)
             i = i + 3
+        if len(list) == 0:
+            bot.send_message(message.chat.id, "Не найдено ни одного pet-проекта. Попробуйте изменить параметры посика.")
         db_format = types.InlineKeyboardMarkup()
         back = types.InlineKeyboardButton(text='В главное меню', callback_data='back_message')
         db_format.row(back)
@@ -237,6 +243,8 @@ def call_message(message):
             db.row(project)
             bot.send_message(message.chat.id, list[i+1] + "\n" + list[i + 2], parse_mode='Markdown', reply_markup=db)
             i = i + 3
+        if len(list) == 0:
+            bot.send_message(message.chat.id, "Не найдено ни одного pet-проекта. Попробуйте изменить параметры посика.")
         db_time = types.InlineKeyboardMarkup()
         back = types.InlineKeyboardButton(text='В главное меню', callback_data='back_message')
         db_time.row(back)
